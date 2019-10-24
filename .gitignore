@@ -1,0 +1,5 @@
+### ca65 assembler ###
+*.lst
+*.o
+*.rom
+

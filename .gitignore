@@ -3,3 +3,5 @@
 *.o
 *.rom
 
+## VS Code settings ## 
+.vscode

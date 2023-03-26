@@ -19,7 +19,6 @@ Consolidated TODO list of things needed for the PC project.
 - Write "logs" to stderr instead of stdout
 - Update CMake and C++ versions
 - Read interrupt vectors from system bus
-- Fix bugs in 16-bit ADC and SBC?
 - Fix bug in XCE switch to native
 - Fix JSR indirect indexed bug
 - Create ROM device

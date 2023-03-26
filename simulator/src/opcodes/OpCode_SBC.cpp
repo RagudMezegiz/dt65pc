@@ -1,8 +1,9 @@
 /*
- * This file is part of the 65816 Emulator Library.
  * Copyright (c) 2018 Francesco Rigoni.
- *
- * https://github.com/FrancescoRigoni/Lib65816
+ * Copyright (C) 2023 David Terhune
+ * 
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/d565pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

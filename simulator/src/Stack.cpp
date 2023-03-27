@@ -1,8 +1,9 @@
 /*
- * This file is part of the 65816 Emulator Library.
  * Copyright (c) 2018 Francesco Rigoni.
+ * Copyright (C) 2023 David Terhune
  *
- * https://github.com/FrancescoRigoni/Lib65816
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/dt65pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +17,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include "Stack.hpp"
 #include "Log.hpp"
 
@@ -57,4 +57,8 @@ uint16_t Stack::pull16Bit() {
 
 uint16_t Stack::getStackPointer() {
     return mStackAddress.getOffset();
+}
+
+void Stack::setEmulation() {
+    mStackAddress = Address(0x00, 0x0100 | (mStackAddress.getOffset() & 0xFF));
 }

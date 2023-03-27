@@ -1,8 +1,9 @@
 /*
- * This file is part of the 65816 Emulator Library.
  * Copyright (c) 2018 Francesco Rigoni.
+ * Copyright (C) 2023 David Terhune
  *
- * https://github.com/FrancescoRigoni/Lib65816
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/dt65pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,19 +103,13 @@ void Cpu65816::executeStatusReg(OpCode &opCode) {
             if (oldEmulation) mCpuStatus.setCarryFlag();
             else mCpuStatus.clearCarryFlag();
 
-            mX &= 0xFF;
-            mY &= 0xFF;
-
             if (mCpuStatus.emulationFlag()) {
                 mCpuStatus.setAccumulatorWidthFlag();
                 mCpuStatus.setIndexWidthFlag();
-            } else {
-                mCpuStatus.clearAccumulatorWidthFlag();
-                mCpuStatus.clearIndexWidthFlag();
+                mX &= 0xFF;
+                mY &= 0xFF;
+                mStack.setEmulation();
             }
-
-            // New stack
-            mStack = Stack(&mSystemBus);
 
             addToProgramAddressAndCycles(1,2);
             break;

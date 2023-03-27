@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
     ram.storeByte(Address(0x00, 0x0001), 0xFB);
     ram.storeByte(Address(0x00, 0x0002), 0xA9);
     ram.storeByte(Address(0x00, 0x0003), 0x65);
-    ram.storeByte(Address(0x00, 0x0004), 0x12);
+    ram.storeByte(Address(0x00, 0x0004), 0xEA);
 
     SystemBus systemBus = SystemBus();
     systemBus.registerDevice(&rom);

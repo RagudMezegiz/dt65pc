@@ -21,7 +21,6 @@ Consolidated TODO list of things needed for the PC project.
 - Read interrupt vectors from system bus
 - Fix bug in XCE switch to native
 - Fix JSR indirect indexed bug
-- Create ROM device
 - Create PC16550D UART device
 - Create 65C22 VIA device
 - Add clock ticks to system bus devices

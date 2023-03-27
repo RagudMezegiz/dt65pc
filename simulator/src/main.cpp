@@ -1,6 +1,25 @@
+// Copyright (C) 2018 Francesco Rigoni
+// Copyright (C) 2023 David Terhune
+// 
+// This file is part of dt65pc.
+// https://github.com/RagudMezegiz/dt65pc
+// 
+// dt65pc is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// dt65pc is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with dt65pc.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Log.hpp"
 #include "Ram.hpp"
+#include "Rom.hpp"
 
 #include "Interrupt.hpp"
 #include "SystemBus.hpp"
@@ -30,6 +49,8 @@ EmulationModeInterrupts emulationInterrupts {
 int main(int argc, char **argv) {
     Log::vrb(LOG_TAG).str("+++ Lib65816 Sample Programs +++").show();
 
+    Rom rom(Address(0x00, 0xE000), "..\\kernel\\dt65pc.rom");
+
     Ram ram = Ram(0x2);
     ram.storeByte(Address(0x00, 0x0000), 0x18);
     ram.storeByte(Address(0x00, 0x0001), 0xFB);
@@ -38,6 +59,7 @@ int main(int argc, char **argv) {
     ram.storeByte(Address(0x00, 0x0004), 0x12);
 
     SystemBus systemBus = SystemBus();
+    systemBus.registerDevice(&rom);
     systemBus.registerDevice(&ram);
 
     Cpu65816 cpu(systemBus, &emulationInterrupts, &nativeInterrupts);

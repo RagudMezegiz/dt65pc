@@ -1,8 +1,9 @@
 /*
- * This file is part of the 65816 Emulator Library.
  * Copyright (c) 2018 Francesco Rigoni.
+ * Copyright (C) 2023 David Terhune
  *
- * https://github.com/FrancescoRigoni/Lib65816
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/dt65pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,26 +32,21 @@ void Cpu65816::executeInterrupt(OpCode &opCode) {
     switch (opCode.getCode()) {
         case(0x00):  // BRK
         {
+            Address vectorAddress;
             if (mCpuStatus.emulationFlag()) {
-                mStack.push16Bit(static_cast<uint16_t>(mProgramAddress.getOffset() + 2));
                 mCpuStatus.setBreakFlag();
-                mStack.push8Bit(mCpuStatus.getRegisterValue());
-                mCpuStatus.setInterruptDisableFlag();
-#ifdef EMU_65C02
-                mCpuStatus.clearDecimalFlag();
-#endif
-                setProgramAddress(Address(0x00, mEmulationInterrupts->brkIrq));
+                vectorAddress = Address(0x00, EIRQ);
                 addToCycles(7);
             } else {
+                vectorAddress = Address(0x00, NBRK);
                 mStack.push8Bit(mProgramAddress.getBank());
-                mStack.push16Bit(static_cast<uint16_t>(mProgramAddress.getOffset() + 2));
-                mStack.push8Bit(mCpuStatus.getRegisterValue());
-                mCpuStatus.setInterruptDisableFlag();
-                mCpuStatus.clearDecimalFlag();
-                Address newAddress(0x00, mNativeInterrupts->brk);
-                setProgramAddress(newAddress);
                 addToCycles(8);
             }
+            mStack.push16Bit(static_cast<uint16_t>(mProgramAddress.getOffset() + 2));
+            mStack.push8Bit(mCpuStatus.getRegisterValue());
+            mCpuStatus.setInterruptDisableFlag();
+            mCpuStatus.clearDecimalFlag();
+            setProgramAddress(Address(0x00, mSystemBus.readTwoBytes(vectorAddress)));
             break;
         }
         case(0x02):                 // COP
@@ -59,14 +55,14 @@ void Cpu65816::executeInterrupt(OpCode &opCode) {
                 mStack.push16Bit(static_cast<uint16_t>(mProgramAddress.getOffset() + 2));
                 mStack.push8Bit(mCpuStatus.getRegisterValue());
                 mCpuStatus.setInterruptDisableFlag();
-                setProgramAddress(Address(0x00, mEmulationInterrupts->coProcessorEnable));
+                setProgramAddress(Address(0x00, mSystemBus.readTwoBytes(Address(0x00, ECOP))));
                 addToCycles(7);
             } else {
                 mStack.push8Bit(mProgramAddress.getBank());
                 mStack.push16Bit(static_cast<uint16_t>(mProgramAddress.getOffset() + 2));
                 mStack.push8Bit(mCpuStatus.getRegisterValue());
                 mCpuStatus.setInterruptDisableFlag();
-                setProgramAddress(Address(0x00, mNativeInterrupts->coProcessorEnable));
+                setProgramAddress(Address(0x00, mSystemBus.readTwoBytes(Address(0x00, NCOP))));
                 addToCycles(8);
             }
             mCpuStatus.clearDecimalFlag();

@@ -1,8 +1,9 @@
 /*
- * This file is part of the 65816 Emulator Library.
  * Copyright (c) 2018 Francesco Rigoni.
+ * Copyright (C) 2023 David Terhune
  *
- * https://github.com/FrancescoRigoni/Lib65816
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/dt65pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,6 +33,18 @@
 #include "Binary.hpp"
 #include "BuildConfig.hpp"
 
+// Interrupt Vector Addresses
+#define NCOP    0xFFE4
+#define NBRK    0xFFE6
+#define NABT    0xFFE8
+#define NNMI    0xFFEA
+#define NIRQ    0xFFEE
+#define ECOP    0xFFF4
+#define EABT    0xFFF8
+#define ENMI    0xFFFA
+#define ERES    0xFFFC
+#define EIRQ    0xFFFE
+
 // Macro used by OpCode methods when an unrecognized OpCode is being executed.
 #define LOG_UNEXPECTED_OPCODE(opCode) Log::err(LOG_TAG).str("Unexpected OpCode: ").str(opCode.getName()).show();
 
@@ -40,7 +53,7 @@ class Cpu65816Debugger;
 class Cpu65816 {
         friend class Cpu65816Debugger;
     public:
-        Cpu65816(SystemBus &, EmulationModeInterrupts *, NativeModeInterrupts *);
+        Cpu65816(SystemBus &);
 
         void setRESPin(bool);
         void setRDYPin(bool);
@@ -65,8 +78,6 @@ class Cpu65816 {
 
     private:
         SystemBus &mSystemBus;
-        EmulationModeInterrupts *mEmulationInterrupts;
-        NativeModeInterrupts *mNativeInterrupts;
 
         // Accumulator register
         uint16_t mA = 0;

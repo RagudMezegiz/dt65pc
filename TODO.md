@@ -18,7 +18,6 @@ Consolidated TODO list of things needed for the PC project.
 
 - Write "logs" to stderr instead of stdout
 - Update CMake and C++ versions
-- Read interrupt vectors from system bus
 - Create PC16550D UART device
 - Create 65C22 VIA device
 - Add clock ticks to system bus devices

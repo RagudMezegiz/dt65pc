@@ -1,8 +1,9 @@
 /*
- * This file is part of the 65816 Emulator Library.
  * Copyright (c) 2018 Francesco Rigoni.
+ * Copyright (C) 2023 David Terhune
  *
- * https://github.com/FrancescoRigoni/Lib65816
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/dt65pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,9 +27,6 @@ Cpu65816Debugger::Cpu65816Debugger(Cpu65816 &cpu) : mCpu(cpu) {
     cpu.setRESPin(false);
 
     Log::dbg(LOG_TAG).str("Cpu is ready to run").show();
-    Log::dbg(LOG_TAG).str("Emulation mode RST vector at").sp().hex(mCpu.mEmulationInterrupts->reset, 4).show();
-    Log::dbg(LOG_TAG).str("Native mode BRK vector at").sp().hex(mCpu.mNativeInterrupts->brk, 4).show();
-    Log::dbg(LOG_TAG).str("Native mode VSYNC vector at").sp().hex(mCpu.mNativeInterrupts->nonMaskableInterrupt, 4).show();
 }
 
 void Cpu65816Debugger::step() {
@@ -176,6 +174,7 @@ void Cpu65816Debugger::logOpCode(OpCode &opCode) const {
             log.str("                    [Stack Relative]");
             break;
         case AddressingMode::StackAbsolute:
+            log.hex(mCpu.mSystemBus.readTwoBytes(mCpu.getAddressOfOpCodeData(opCode)), 4);
             break;
         case AddressingMode::StackDirectPageIndirect:
             break;

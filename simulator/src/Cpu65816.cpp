@@ -1,8 +1,9 @@
 /*
- * This file is part of the 65816 Emulator Library.
  * Copyright (c) 2018 Francesco Rigoni.
+ * Copyright (C) 2023 David Terhune
  *
- * https://github.com/FrancescoRigoni/Lib65816
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/dt65pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,11 +28,9 @@
 #define LOG_TAG (mCpuStatus.emulationFlag() ? "Cpu6502" : "Cpu65816")
 #endif
 
-Cpu65816::Cpu65816(SystemBus &systemBus, EmulationModeInterrupts *emulationInterrupts, NativeModeInterrupts *nativeInterrupts) :
-            mSystemBus(systemBus),
-            mEmulationInterrupts(emulationInterrupts),
-            mNativeInterrupts(nativeInterrupts),
-            mStack(&mSystemBus) {
+Cpu65816::Cpu65816(SystemBus &systemBus) :
+        mSystemBus(systemBus),
+        mStack(&mSystemBus) {
 }
 
 
@@ -67,7 +66,6 @@ CpuStatus *Cpu65816::getCpuStatus() {
     return &mCpuStatus;
 }
 
-
 /**
  * Resets the cpu to its initial state.
  * */
@@ -80,7 +78,7 @@ void Cpu65816::reset() {
     mY &= 0xFF;
     mD = 0x0;
     mStack = Stack(&mSystemBus);
-    mProgramAddress = Address(0x00, mEmulationInterrupts->reset);
+    mProgramAddress = Address(0x00, mSystemBus.readTwoBytes(Address(0x00, ERES)));
 }
 
 void Cpu65816::setRESPin(bool value) {
@@ -108,18 +106,18 @@ bool Cpu65816::executeNextInstruction() {
         PB is loaded with $00 (65C816/65C802 only when operating in native mode).
         PC is loaded from the relevant vector (see tables).
         */
-        if (!mCpuStatus.emulationFlag())  {
-            mStack.push8Bit(mProgramAddress.getBank());
-            mStack.push16Bit(mProgramAddress.getOffset());
-            mStack.push8Bit(mCpuStatus.getRegisterValue());
-            mCpuStatus.setInterruptDisableFlag();
-            mProgramAddress = Address(0x00,mSystemBus.readTwoBytes(Address(0x00,0xFFEE)));
+        Address vectorAddress;
+        if (mCpuStatus.emulationFlag())  {
+            vectorAddress = Address(0x00, EIRQ);
         } else {
-            mStack.push16Bit(mProgramAddress.getOffset());
-            mStack.push8Bit(mCpuStatus.getRegisterValue());
-            mCpuStatus.setInterruptDisableFlag();
-            mProgramAddress = Address(0x00,mSystemBus.readTwoBytes(Address(0x00,0xFFFE)));
+            mStack.push8Bit(mProgramAddress.getBank());
+            vectorAddress = Address(0x00, NIRQ);
         }
+        mStack.push16Bit(mProgramAddress.getOffset());
+        mStack.push8Bit(mCpuStatus.getRegisterValue());
+        mCpuStatus.setInterruptDisableFlag();
+        mCpuStatus.clearDecimalFlag();
+        mProgramAddress = Address(0x00, mSystemBus.readTwoBytes(vectorAddress));
     }
 
     // Fetch the instruction

@@ -1,8 +1,9 @@
 /*
- * This file is part of the 65816 Emulator Library.
  * Copyright (c) 2018 Francesco Rigoni.
+ * Copyright (C) 2023 David Terhune
  *
- * https://github.com/FrancescoRigoni/Lib65816
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/dt65pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,26 +21,6 @@
 #ifndef INTERRUPT_HPP
 #define INTERRUPT_HPP
 
-#include <cstdint>
-
-// Interrupt table. Native mode.
-typedef struct {
-    const uint16_t coProcessorEnable;
-    const uint16_t brk;
-    const uint16_t abort;
-    const uint16_t nonMaskableInterrupt;
-    const uint16_t reset;
-    const uint16_t interruptRequest;
-} NativeModeInterrupts;
-
-// Interrupt table. Emulation mode.
-typedef struct {
-    const uint16_t coProcessorEnable;
-    const uint16_t unused;
-    const uint16_t abort;
-    const uint16_t nonMaskableInterrupt;
-    const uint16_t reset;
-    const uint16_t brkIrq;
-} EmulationModeInterrupts;
+// TODO Add needed interrupt support code.
 
 #endif // INTERRUPT_HPP

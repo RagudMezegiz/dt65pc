@@ -1,8 +1,9 @@
 /*
- * This file is part of the 65816 Emulator Library.
  * Copyright (c) 2018 Francesco Rigoni.
+ * Copyright (C) 2023 David Terhune
  *
- * https://github.com/FrancescoRigoni/Lib65816
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/dt65pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +48,6 @@ void Cpu65816::executeJumpReturn(OpCode &opCode) {
         case(0xFC):  // JSR Absolute Indexed Indirect, X
         {
             Address destinationAddress = getAddressOfOpCodeData(opCode);
-            mStack.push8Bit(mProgramAddress.getBank());
             mStack.push16Bit(mProgramAddress.getOffset() + 2);
             setProgramAddress(destinationAddress);
             addToCycles(8);

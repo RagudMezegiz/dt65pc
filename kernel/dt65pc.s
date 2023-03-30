@@ -16,13 +16,13 @@
 ; Symbolic constants
 ;======================================================================
 
-; Math ROM base addresses
-k_math_square   = $E00000
-k_math_invert   = $E40000
-k_math_sin      = $E80000
-k_math_asin     = $EA0000
-k_math_atan     = $EC0000
-k_math_log2     = $ED0000
+; Math ROM bank addresses
+k_math_square   = $E0
+k_math_invert   = $E4
+k_math_sin      = $E8
+k_math_asin     = $EA
+k_math_atan     = $EC
+k_math_log2     = $ED
 k_math_bitrev14 = $EF0000
 k_math_bitrev13 = $EF8000
 k_math_bitrev12 = $EFC000
@@ -36,15 +36,15 @@ k_math_bitrev05 = $EFFF80
 k_math_bitrev04 = $EFFFC0
 k_math_bitrev03 = $EFFFE0
 k_math_bitrev02 = $EFFFF0
-k_math_alog2    = $F00000
-k_math_log2a    = $F20000
-k_math_alog2a   = $F40000
-k_math_log2b    = $F60000
-k_math_alog2b   = $F80000
-k_math_sqrt1    = $FA0000
-k_math_sqrt2    = $FB0000
-k_math_sqrt3    = $FC0000
-k_math_mult     = $FE0000
+k_math_alog2    = $F0
+k_math_log2a    = $F2
+k_math_alog2a   = $F4
+k_math_log2b    = $F6
+k_math_alog2b   = $F8
+k_math_sqrt1    = $FA
+k_math_sqrt2    = $FB
+k_math_sqrt3    = $FC
+k_math_mult     = $FE
 
 ;======================================================================
 ; Kernel API call jump table.  All API calls are to two-byte addresses
@@ -104,12 +104,39 @@ native_nmib:
     lda #$FF
     tcs
 
+    ; Switch to native mode
+    clc
+    xce
+
+    ; TODO Check memory-mapped I/O devices
+
     ; See if the math ROMs are installed properly.
+
+    ; Use the SIN function for ROM0
+    set16a
+    lda #$2000      ; 45 degrees for the sine table
+    asl a           ; left-shift to convert to table index
+    sta 0           ; store in zero-page
+    lda #k_math_sin ; base table address
+    adc #0          ; add one if shift had a carry
+    sta 2           ; store bank byte
+    lda [0]         ; get the answer
+    cmp #$5A82
+    bne post_fail   ; TODO Set NO ROM0 flag instead
+
+    ; Use the MULT function for ROM1
+    lda #$F008      ; $F0 * $08
+    asl a           ; left-shift to convert to table index
+    sta 0           ; store in zero-page
+    lda #k_math_mult    ; base table address
+    adc #0          ; add one if shift had a carry
+    sta 2           ; store bank byte
+    lda [0]         ; get the answer
+    cmp #$0780
+    bne post_fail   ; TODO Set NO ROM1 flag instead
 
     ; Check high RAM to see how many banks are populated. Save the
     ; bank count in zero page to print later.
-
-    ; TODO Check memory-mapped I/O devices
 
     ; End of POST
     jmp mon_start

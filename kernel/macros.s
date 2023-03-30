@@ -1,7 +1,8 @@
-; DT65PC system include
-; Copyright (c) 2019 David Terhune
+; Custom macro includes.
+; Copyright (c) 2019-2023 David Terhune
 ;
-; System includes can be used in any program to define kernel services.
+; General-purpose macros to simplify some programming tasks.
+; No machine-specific code should go into this macro library.
 
 ; Processor flag definitions.  Bitwise OR the flags together for readable
 ; REP and SEP instructions.
@@ -41,5 +42,3 @@ c_flag = 1
     .a8
     .i8
 .endmac
-
-

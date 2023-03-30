@@ -31,11 +31,15 @@
 int main(int argc, char **argv) {
     Log::vrb(LOG_TAG).str("+++ DT65PC Simulation +++").show();
 
-    Rom rom(Address(0x00, 0xE000), "..\\kernel\\dt65pc.rom");
+    Rom kernel(Address(0x00, 0xE000), "..\\kernel\\dt65pc.rom");
+    Rom math0(Address(0xE0, 0x0000), "..\\kernel\\rom0.rom");
+    Rom math1(Address(0xF0, 0x0000), "..\\kernel\\rom1.rom");
     Ram ram = Ram(0x80);
 
     SystemBus systemBus = SystemBus();
-    systemBus.registerDevice(&rom);
+    systemBus.registerDevice(&kernel);
+    systemBus.registerDevice(&math0);
+    systemBus.registerDevice(&math1);
     systemBus.registerDevice(&ram);
 
     Cpu65816 cpu(systemBus);

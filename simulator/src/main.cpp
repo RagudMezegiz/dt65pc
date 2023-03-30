@@ -29,16 +29,10 @@
 #define LOG_TAG "MAIN"
 
 int main(int argc, char **argv) {
-    Log::vrb(LOG_TAG).str("+++ Lib65816 Sample Programs +++").show();
+    Log::vrb(LOG_TAG).str("+++ DT65PC Simulation +++").show();
 
     Rom rom(Address(0x00, 0xE000), "..\\kernel\\dt65pc.rom");
-
-    Ram ram = Ram(0x2);
-    ram.storeByte(Address(0x00, 0x0000), 0x18);
-    ram.storeByte(Address(0x00, 0x0001), 0xFB);
-    ram.storeByte(Address(0x00, 0x0002), 0xA9);
-    ram.storeByte(Address(0x00, 0x0003), 0x65);
-    ram.storeByte(Address(0x00, 0x0004), 0xEA);
+    Ram ram = Ram(0x80);
 
     SystemBus systemBus = SystemBus();
     systemBus.registerDevice(&rom);
@@ -46,12 +40,14 @@ int main(int argc, char **argv) {
 
     Cpu65816 cpu(systemBus);
     Cpu65816Debugger debugger(cpu);
-    debugger.setBreakPoint(Address(0x00, 0xE130));
     debugger.doBeforeStep([]() {});
     debugger.doAfterStep([]() {});
 
     bool breakPointHit = false;
     debugger.onBreakPoint([&breakPointHit]()  {
+        breakPointHit = true;
+    });
+    debugger.onStp([&breakPointHit]() {
         breakPointHit = true;
     });
 
@@ -61,5 +57,5 @@ int main(int argc, char **argv) {
 
     debugger.dumpCpu();
 
-    Log::vrb(LOG_TAG).str("+++ Program completed +++").show();
+    Log::vrb(LOG_TAG).str("+++ DT65PC Stopped +++").show();
 }

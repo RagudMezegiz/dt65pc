@@ -23,15 +23,14 @@
 #define LOG_TAG "Stack"
 
 Stack::Stack(SystemBus *systemBus) :
-        mSystemBus(systemBus),
-        mStackAddress(0x00, STACK_POINTER_DEFAULT) {
-    Log::trc(LOG_TAG).str("Initialized at default location ").sp().hex(mStackAddress.getOffset(), 4).show();
+        mSystemBus(systemBus) {
+    setEmulation();
 }
 
 Stack::Stack(SystemBus *systemBus, uint16_t stackPointer) :
         mSystemBus(systemBus),
         mStackAddress(0x00, stackPointer) {
-    Log::trc(LOG_TAG).str("Initialized at location ").sp().hex(mStackAddress.getOffset(), 4).show();
+    Log::trc(LOG_TAG).str("Set to ").hex(stackPointer, 4).show();
 }
 
 void Stack::push8Bit(uint8_t value) {

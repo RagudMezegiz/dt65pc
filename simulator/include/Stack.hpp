@@ -21,7 +21,7 @@
 #define STACK_HPP_INCLUDED
 
 #include <cstdint>
-#include  "SystemBus.hpp"
+#include "SystemBus.hpp"
 
 #define STACK_POINTER_DEFAULT 0x1FF
 

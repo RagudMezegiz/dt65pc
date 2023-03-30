@@ -1,8 +1,9 @@
 /*
- * This file is part of the 65816 Emulator Library.
  * Copyright (c) 2018 Francesco Rigoni.
- *
- * https://github.com/FrancescoRigoni/Lib65816
+ * Copyright (C) 2023 David Terhune
+ * 
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/d565pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,11 +39,16 @@ void Cpu65816::executeMisc(OpCode &opCode) {
         }
         case(0xDB):     // STP
         {
-            reset();
             addToProgramAddress(1);
             addToCycles(3);
-            break;
 
+            // What actually happens is that the PHI2 clock is held high,
+            // which prevents internal circuitry from doing anything,
+            // because things are edge-triggered. There's no "disable PHI2"
+            // hidden internal pin that prevents operations, but setting
+            // the RES pin high should accomplish essentially the same thing.
+            setRESPin(true);
+            break;
         }
         case(0xCB):     // WAI
         {

@@ -46,6 +46,9 @@ k_math_sqrt2    = $FB
 k_math_sqrt3    = $FC
 k_math_mult     = $FE
 
+; Page 3 kernel storage
+bank_count = $0300
+
 ;======================================================================
 ; Kernel API call jump table.  All API calls are to two-byte addresses
 ; residing in kernel ROM.
@@ -86,34 +89,62 @@ native_nmib:
     ; Given that this code is executing, it's probably safe to assume
     ; that the kernel ROM exists.
 
+    ; Switch to native mode and 16-bit accumulator.
+    clc
+    xce
+    set16a
+
     ; Check for low RAM first, to see if it's safe to set the stack
     ; pointer. Use bit patterns that aren't likely to be random.
-    lda #$55
+    lda #$AA55
     sta a:0     ; force absolute rather than zero page
     lda a:0
-    cmp #$55
+    cmp #$AA55
     bne post_fail
-    lda #$AA
+    lda #$55AA
     sta a:0
     lda a:0
-    cmp #$AA
+    cmp #$55AA
     bne post_fail
 
     ; Low RAM appears to exist, so it should be safe to set the stack
-    ; pointer and start using subroutines.
-    lda #$FF
+    ; pointer and start using subroutines. Use 2 pages for stack
+    ; instead of the default one to make sure there's plenty of room
+    ; for parameter passing and/or local variables.
+    lda #$02FF
     tcs
 
-    ; Switch to native mode
-    clc
-    xce
+    ; TODO Check memory-mapped I/O devices.
+    ; Start with the serial UART that's expected to be connected to
+    ; a terminal so later tests can print results.
 
-    ; TODO Check memory-mapped I/O devices
+    ; Check high RAM to see how many banks are populated. Save the
+    ; bank count in zero page to print later.
+    ldx #1
+next_bank:
+    phx
+    plb
+    lda #$AA55
+    sta a:0
+    lda a:0
+    cmp #$AA55
+    bne end_banks
+    lda #$55AA
+    sta a:0
+    lda a:0
+    cmp #$55AA
+    bne end_banks
+    inx
+    bra next_bank
+end_banks:
+    dex         ; X holds one more bank than exists, so decrement
+    stx bank_count
+
+    ; TODO Print available RAM
 
     ; See if the math ROMs are installed properly.
 
     ; Use the SIN function for ROM0
-    set16a
     lda #$2000      ; 45 degrees for the sine table
     asl a           ; left-shift to convert to table index
     sta 0           ; store in zero-page
@@ -134,9 +165,6 @@ native_nmib:
     lda [0]         ; get the answer
     cmp #$0780
     bne post_fail   ; TODO Set NO ROM1 flag instead
-
-    ; Check high RAM to see how many banks are populated. Save the
-    ; bank count in zero page to print later.
 
     ; End of POST
     jmp mon_start
@@ -176,7 +204,7 @@ post_fail:
     .error "Kernel too large (> 1FE4 bytes)"
 .endif
 
-; Vector addresses start at FFE0
+; Vector addresses start at FFE4
     .res $FFE4 - *, $00
 
 ; Native vectors

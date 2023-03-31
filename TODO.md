@@ -5,13 +5,7 @@ Consolidated TODO list of things needed for the PC project.
 ## Kernel
 
 - Refactor to start with POST
-  - Set native mode
-  - LoRAM check
-  - Set stack pointer
   - Device checks
-  - HiRAM check
-  - Math ROM check
-- Delete unused video chip
 - "Hello World" to serial out (assume a terminal)
 
 ## Simulator

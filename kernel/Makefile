@@ -4,7 +4,7 @@
 all: dt65pc.rom rom0.rom rom1.rom
 
 dt65pc.rom: dt65pc.o dt65pc.cfg
-	ld65 -C dt65pc.cfg -S 57344 -o $@ $<
+	ld65 -C dt65pc.cfg -S 49152 -o $@ $<
 
 dt65pc.o: dt65pc.s macros.s monitor.s
 	ca65 --cpu 65816 -l dt65pc.lst $<

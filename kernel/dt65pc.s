@@ -6,8 +6,8 @@
 ; Force 65816 mode in case the command-line invocation didn't
 .p816
 
-; Kernel ROM starts at E000
-    .org $E000
+; Kernel ROM starts at C000
+    .org $C000
 
 ; Macro includes
 .include "macros.s"
@@ -54,7 +54,7 @@ bank_count = $0300
 ; residing in kernel ROM.
 ;======================================================================
 
-    .res $E100 - *, $00  ; leave all 128 jump table slots free
+    .res $C100 - *, $00  ; leave all 128 jump table slots free
 
 ;======================================================================
 ; Kernel string constant section.

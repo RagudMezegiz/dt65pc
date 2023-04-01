@@ -47,7 +47,27 @@ k_math_sqrt3    = $FC
 k_math_mult     = $FE
 
 ; Page 3 kernel storage
-bank_count = $0300
+bank_count = $0300  ; 1 byte
+
+; UART base addresses
+UART0_BASE  = $B000
+
+; UART register offsets
+uart_RBR = 0
+uart_THR = 0
+uart_IER = 1
+uart_IIR = 2
+uart_FCR = 2
+uart_LCR = 3
+uart_MCR = 4
+uart_LSR = 5
+uart_MSR = 6
+uart_SCR = 7
+uart_DLL = 0
+uart_DLM = 1
+
+; UART control bits
+uartMCR_LOOP    = $10
 
 ;======================================================================
 ; Kernel API call jump table.  All API calls are to two-byte addresses
@@ -114,12 +134,19 @@ native_nmib:
     lda #$02FF
     tcs
 
-    ; TODO Check memory-mapped I/O devices.
-    ; Start with the serial UART that's expected to be connected to
-    ; a terminal so later tests can print results.
+    ; Check memory-mapped I/O devices.
 
-    ; Check high RAM to see how many banks are populated. Save the
-    ; bank count in zero page to print later.
+    ; Check UART0, which is expected to be connected to a terminal so later
+    ; tests can print results.
+    pea UART0_BASE
+    jsr uart_loop_test
+    pla
+    bne post_fail
+
+    ; TODO Set up UART0 for terminal I/O
+
+    ; Check high RAM to see how many banks are populated.
+    ; Save the bank count to print later.
     ldx #1
 next_bank:
     phx
@@ -175,6 +202,47 @@ post_fail:
 .endproc
 
 ;======================================================================
+; Loopback test of PC16550D UART
+; The base address of the UART should be just above the return address
+; on the stack. It will be replaced with a 2-byte code indicating
+; test success or failure. Zero is success, while non-zero means
+; failure.
+;======================================================================
+.proc uart_loop_test
+    ; Set the loopback bit in the MCR, write a couple bytes to the
+    ; transmit register and verify they read back correctly.
+    set8a
+    lda #uartMCR_LOOP
+    ldy #uart_MCR
+    sta (3,s),y
+    lda #$55
+    ldy #uart_THR
+    sta (3,s),y
+    ; It's supposed to be immediate, but give it a couple cycles before reading
+    nop
+    lda (3,s),y ; RBR and THR are same address, so no need to change Y
+    cmp #$55
+    bne test_fail
+    lda #$AA
+    sta (3,s),y
+    nop
+    lda (3,s),y
+    cmp #$AA
+    bne test_fail
+
+    ; Successful test - replace address with 2-byte zero
+    set16a
+    lda #0
+    sta 3,s
+
+; If branch to here, UART address is non-zero and should indicate failure.
+; If fall-through, the zeros have already overwritten it.
+test_fail:
+    set16a
+    rts
+.endproc
+
+;======================================================================
 ; Native mode vectors
 ;======================================================================
 
@@ -201,7 +269,7 @@ post_fail:
 
 ; Make sure we haven't overrun our kernel space
 .if * > $FFE4
-    .error "Kernel too large (> 1FE4 bytes)"
+    .error "Kernel too large (> 3FE4 bytes)"
 .endif
 
 ; Vector addresses start at FFE4

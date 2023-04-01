@@ -6,12 +6,14 @@ Consolidated TODO list of things needed for the PC project.
 
 - Refactor to start with POST
   - Device checks
-- "Hello World" to serial out (assume a terminal)
+- Welcome message to serial out (assume a terminal)
+- Move UART to separate source file
+- Move math to separate source file
 
 ## Simulator
 
-- Write "logs" to stderr instead of stdout
+- Write "logs" to file instead of stdout
 - Update CMake and C++ versions
-- Create PC16550D UART device
+- Finish PC16550D UART device
 - Create 65C22 VIA device
 - Add clock ticks to system bus devices

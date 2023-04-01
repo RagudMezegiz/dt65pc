@@ -42,7 +42,7 @@ private:
     Rom(const Rom&);
     Rom& operator=(const Rom&);
 
-    Address mBase;
+    uint32_t mBase;
     std::vector<uint8_t> mRom;
 };
 

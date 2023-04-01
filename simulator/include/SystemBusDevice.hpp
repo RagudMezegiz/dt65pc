@@ -66,29 +66,25 @@ class Address {
         }
 };
 
-/**
- Every device (PPU, APU, ...) implements this interface.
- */
+/// @brief Interface for all devices that reside on the system bus.
 class SystemBusDevice {
     public:
-        virtual ~SystemBusDevice() {};
+        virtual ~SystemBusDevice() {}
 
-        /**
-          Stores one byte to the real address represented by the specified virtual address.
-          That is: maps the virtual address to the real one and stores one byte in it.
-         */
-        virtual void storeByte(const Address &, uint8_t) = 0;
+        /// @brief Store one byte to the device address.
+        /// @param addr address as returned from decodeAddress
+        /// @param val value to store
+        virtual void storeByte(const Address& addr, uint8_t val) = 0;
 
-        /**
-          Reads one byte from the real address represented by the specified virtual address.
-          That is: maps the virtual address to the real one and reads from it.
-         */
-        virtual uint8_t readByte(const Address &) = 0;
+        /// @brief Read one byte from the device address.
+        /// @param addr address as returned from decodeAddress
+        /// @return value at that address
+        virtual uint8_t readByte(const Address& addr) = 0;
 
-        /**
-          Returns true if the address was decoded successfully by this device.
-         */
-        virtual bool decodeAddress(const Address &, Address &) = 0;
+        /// @brief Decode the address into a device address.
+        /// @param in absolute address
+        /// @param out decoded address
+        virtual bool decodeAddress(const Address& in, Address& out) = 0;
 };
 
 #endif // SYSBUS_DEVICE_H

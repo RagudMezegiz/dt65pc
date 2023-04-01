@@ -22,7 +22,7 @@
 #define LOG_TAG "ROM"
 
 Rom::Rom(const Address& baseAddr, const std::string& filename)
-        : mBase(baseAddr) {
+        : mBase(baseAddr.getAbsolute()) {
     std::ifstream infile(filename, std::ios_base::binary);
     std::copy(std::istreambuf_iterator<char>(infile),
               std::istreambuf_iterator<char>(),
@@ -39,7 +39,7 @@ uint8_t Rom::readByte(const Address& addr) {
 }
 
 bool Rom::decodeAddress(const Address& in, Address& out) {
-    uint32_t addr = in.getAbsolute() - mBase.getAbsolute();
+    uint32_t addr = in.getAbsolute() - mBase;
     out = Address((addr >> 16) & 0xFF, addr & 0xFFFF);
     return addr < mRom.size();
 }

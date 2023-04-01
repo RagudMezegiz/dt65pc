@@ -47,16 +47,18 @@ k_math_sqrt3    = $FC
 k_math_mult     = $FE
 
 ; Kernel zero-page storage
-rom_flags   = $00   ; Bit 0 = math ROM0 present
-                    ; Bit 1 = math ROM1 present
-                    ; Bit 2 = unused
-                    ; Bit 3 = unused
-                    ; Bit 4 = unused
-                    ; Bit 5 = unused
-                    ; Bit 6 = unused
-                    ; Bit 7 = unused
+k_flags = $00   ; Bit 0 = math ROM0 present
+                ; Bit 1 = math ROM1 present
+                ; Bit 2 = unused
+                ; Bit 3 = unused
+                ; Bit 4 = unused
+                ; Bit 5 = unused
+                ; Bit 6 = unused
+                ; Bit 7 = unused
 
-k_zero_size = $80   ; Number of zero-page bytes used by the kernel
+k_temp  = k_flags + 1   ; 4 bytes
+
+k_zero_size = k_temp + 4    ; Number of zero-page bytes used by the kernel
 
 ; Kernel storage addresses
 k_base      = $0700
@@ -181,24 +183,36 @@ next_byte:
     ; Use the SIN function for ROM0
     lda #$2000      ; 45 degrees for the sine table
     asl a           ; left-shift to convert to table index
-    sta 0           ; store in zero-page
+    sta k_temp      ; store in zero-page
     lda #k_math_sin ; base table address
     adc #0          ; add one if shift had a carry
-    sta 2           ; store bank byte
-    lda [0]         ; get the answer
+    sta k_temp + 2  ; store bank byte
+    lda [k_temp]    ; get the answer
     cmp #$5A82
-    bne post_fail   ; TODO Set NO ROM0 flag instead
+    bne rom0_bad
+    set8a
+    lda #1          ; set ROM0 present flag
+    tsb k_flags
+    set16a
+rom0_bad:
 
     ; Use the MULT function for ROM1
     lda #$F008      ; $F0 * $08
     asl a           ; left-shift to convert to table index
-    sta 0           ; store in zero-page
+    sta k_temp      ; store in zero-page
     lda #k_math_mult    ; base table address
     adc #0          ; add one if shift had a carry
-    sta 2           ; store bank byte
-    lda [0]         ; get the answer
+    sta k_temp + 2  ; store bank byte
+    lda [k_temp]    ; get the answer
     cmp #$0780
-    bne post_fail   ; TODO Set NO ROM1 flag instead
+    bne rom1_bad
+    set8a
+    lda #2          ; set ROM1 present flag
+    tsb k_flags
+    set16a
+rom1_bad:
+
+    ldy k_flags     ; put flags into Y for sim display
 
     ; End of POST
     jmp mon_start

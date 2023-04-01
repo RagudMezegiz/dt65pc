@@ -30,6 +30,7 @@
 #define LOG_TAG "MAIN"
 
 int main(int argc, char **argv) {
+    Log::out("dt65pc.log");
     Log::vrb(LOG_TAG).str("+++ DT65PC Simulation +++").show();
 
     Rom kernel(Address(0x00, 0xC000), "..\\kernel\\dt65pc.rom");
@@ -63,7 +64,9 @@ int main(int argc, char **argv) {
         debugger.step();
     }
 
-    debugger.dumpCpu();
-
     Log::vrb(LOG_TAG).str("+++ DT65PC Stopped +++").show();
+    debugger.dumpCpu();
+    Log::out();
+    
+    debugger.dumpCpu();
 }

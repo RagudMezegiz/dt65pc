@@ -1,8 +1,9 @@
 /*
- * This file is part of the simple-logger Library.
  * Copyright (c) 2018 Francesco Rigoni.
- *
- * https://github.com/FrancescoRigoni/simple-logger
+ * Copyright (C) 2023 David Terhune
+ * 
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/dt65pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,8 +26,19 @@ Log Log::sVerboseLog(true);
 Log Log::sDebugLog(true);
 Log Log::sTraceLog(true);
 Log Log::sErrorLog(true);
+std::ofstream Log::sOut;
 
 Log::Log(const bool enabled) : mEnabled(enabled) {
+}
+
+void Log::out(const std::string& fname) {
+    sOut = std::ofstream(fname);
+}
+
+void Log::out() {
+    if (sOut.is_open()) {
+        sOut.close();
+    }
 }
 
 Log& Log::dbg(const char *tag) {
@@ -81,7 +93,11 @@ Log &Log::sp() {
 
 void Log::show() {
     if (mEnabled) {
-        std::cout << mTag << ": " << mStream.str() << std::endl;
+        if (sOut.is_open()) {
+            sOut << mTag << ": " << mStream.str() << std::endl;
+        } else {
+            std::cerr << mTag << ": " << mStream.str() << std::endl;
+        }
         mStream.str("");
         mStream.clear();
     }

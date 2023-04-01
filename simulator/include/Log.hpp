@@ -1,8 +1,9 @@
 /*
- * This file is part of the simple-logger Library.
  * Copyright (c) 2018 Francesco Rigoni.
- *
- * https://github.com/FrancescoRigoni/simple-logger
+ * Copyright (C) 2023 David Terhune
+ * 
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/dt65pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,13 +18,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LOG__
-#define __LOG__
+#ifndef LOG_HPP_INCLUDED
+#define LOG_HPP_INCLUDED
 
 #include <cstdint>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <fstream>
 
 class Log {
     private:
@@ -31,6 +33,7 @@ class Log {
         static Log sVerboseLog;
         static Log sTraceLog;
         static Log sErrorLog;
+        static std::ofstream sOut;
         
         Log(const bool);
         const char *mTag;
@@ -38,24 +41,62 @@ class Log {
         std::ostringstream mStream;
         
     public:
-        // Returns debug log
-        static Log& dbg(const char *);
-        // Returns verbose log
-        static Log& vrb(const char *);
-        // Returns trace log
-        static Log& trc(const char *);
-        // Returns error log
-        static Log& err(const char *);
+        /// @brief Set output to a file.
+        /// @param fname log file name
+        static void out(const std::string& fname);
         
-        Log &str(const char *);
-        Log &hex(uint32_t);
-        Log &hex(uint32_t, uint8_t);
-        Log &dec(uint32_t);
-        Log &dec(uint32_t, uint8_t);
+        /// @brief Close the output file, if open.
+        static void out();
+
+        /// @brief Return debug log.
+        /// @param tag log tag
+        static Log& dbg(const char* tag);
+
+        /// @brief Return verbose log.
+        /// @param tag log tag
+        static Log& vrb(const char* tag);
+
+        /// @brief Return trace log.
+        /// @param tag log tag
+        static Log& trc(const char* tag);
+
+        /// @brief Return error log.
+        /// @param tag log tag
+        static Log& err(const char* tag);
+        
+        /// @brief Write a string.
+        /// @param msg string to write
+        /// @return this, for chaining
+        Log &str(const char* msg);
+
+        /// @brief Write a hex value.
+        /// @param val integer value
+        /// @return this, for chaining
+        Log &hex(uint32_t val);
+
+        /// @brief Write a hex value.
+        /// @param val integer value
+        /// @param w width in characters
+        /// @return this, for chaining
+        Log &hex(uint32_t val, uint8_t w);
+
+        /// @brief Write a decimal value.
+        /// @param val integer value
+        /// @return this, for chaining
+        Log &dec(uint32_t val);
+
+        /// @brief Write a decimal value.
+        /// @param val integer value
+        /// @param w width in characters
+        /// @return this, for chaining
+        Log &dec(uint32_t val, uint8_t w);
+
+        /// @brief Write a space.
+        /// @return this, for chaining
         Log &sp();
         
+        /// @brief Write log buffer to the output.
         void show();
 };
 
-#endif
-
+#endif // LOG_HPP_INCLUDED

@@ -22,11 +22,11 @@ chips selected for both ease of use and potential acquirability.
 
 Bank 00:
 
-* 0000-CFFF = RAM
-* D000-DFFF = Memory-mapped IO
-* E000-FFFF = Kernel ROM
+* 0000-AFFF = RAM
+* B000-BFFF = Memory-mapped IO
+* C000-FFFF = Kernel ROM
 
-Banks 01-DF:
+Banks 01-7F:
 
 * 0000-FFFF = RAM
 

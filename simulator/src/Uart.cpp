@@ -20,6 +20,9 @@
 // Number of bytes in FIFOs.
 #define FIFO_SIZE   16
 
+// IIR bit flags
+#define FIFO_INT    0xC0
+
 // FCR bit flags
 #define FIFO_ENABLE     1
 #define RCVR_FIFO_RESET 2
@@ -130,6 +133,7 @@ void UartPC16550D::storeByte(const Address& addr, uint8_t val) {
             mRcvrFifo.clear();
             mXmitFifo.clear();
             mFCR = FIFO_ENABLE; // clear all bits except FIFO_ENABLE
+            mIIR |= FIFO_INT; // set FIFO interrupt bits in IIR
         } else {
             // val does not have FIFO_ENABLE bit.
             if (mFCR & FIFO_ENABLE) {
@@ -138,6 +142,7 @@ void UartPC16550D::storeByte(const Address& addr, uint8_t val) {
                 mXmitFifo.clear();
             }
             mFCR = 0; // clear FCR
+            mIIR &= ~FIFO_INT; // clear FIFO interrupt bits in IIR
         }
         break;
 

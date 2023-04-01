@@ -46,11 +46,25 @@ k_math_sqrt2    = $FB
 k_math_sqrt3    = $FC
 k_math_mult     = $FE
 
-; Page 3 kernel storage
-bank_count = $0300  ; 1 byte
+; Kernel zero-page storage
+rom_flags   = $00   ; Bit 0 = math ROM0 present
+                    ; Bit 1 = math ROM1 present
+                    ; Bit 2 = unused
+                    ; Bit 3 = unused
+                    ; Bit 4 = unused
+                    ; Bit 5 = unused
+                    ; Bit 6 = unused
+                    ; Bit 7 = unused
+
+k_zero_size = $80   ; Number of zero-page bytes used by the kernel
+
+; Kernel storage addresses
+k_base      = $0700
+bank_count  = k_base    ; 1 byte
 
 ; UART base addresses
 UART0_BASE  = $B000
+UART1_BASE  = $B100
 
 ; UART register offsets
 uart_RBR = 0
@@ -128,11 +142,17 @@ native_nmib:
     bne post_fail
 
     ; Low RAM appears to exist, so it should be safe to set the stack
-    ; pointer and start using subroutines. Use 2 pages for stack
-    ; instead of the default one to make sure there's plenty of room
-    ; for parameter passing and/or local variables.
-    lda #$02FF
+    ; pointer and start using subroutines. Stack starts just under the
+    ; base address for kernal storage.
+    lda #k_base - 1
     tcs
+
+    ; Zero out kernel zero-page storage.
+    ldx #k_zero_size
+next_byte:
+    dex
+    stz 0,x
+    bne next_byte
 
     ; Check memory-mapped I/O devices.
 
@@ -145,27 +165,14 @@ native_nmib:
 
     ; TODO Set up UART0 for terminal I/O
 
-    ; Check high RAM to see how many banks are populated.
-    ; Save the bank count to print later.
-    ldx #1
-next_bank:
-    phx
-    plb
-    lda #$AA55
-    sta a:0
-    lda a:0
-    cmp #$AA55
-    bne end_banks
-    lda #$55AA
-    sta a:0
-    lda a:0
-    cmp #$55AA
-    bne end_banks
-    inx
-    bra next_bank
-end_banks:
-    dex         ; X holds one more bank than exists, so decrement
-    stx bank_count
+    ; Check UART1
+    pea UART1_BASE
+    jsr uart_loop_test
+    pla
+    bne post_fail
+
+    ; High RAM check to save how many banks are populated.
+    jsr hiram_test
 
     ; TODO Print available RAM
 
@@ -239,6 +246,37 @@ post_fail:
 ; If fall-through, the zeros have already overwritten it.
 test_fail:
     set16a
+    rts
+.endproc
+
+;======================================================================
+; High RAM test
+;======================================================================
+.proc hiram_test
+    .a16
+    ldx #1
+next_bank:
+    phx
+    plb
+    lda #$AA55
+    sta a:0
+    lda a:0
+    cmp #$AA55
+    bne end_banks
+    lda #$55AA
+    sta a:0
+    lda a:0
+    cmp #$55AA
+    bne end_banks
+    inx
+    bra next_bank
+end_banks:
+    dex         ; X holds one more bank than exists, so decrement
+    stx bank_count
+
+    ; Reset to bank 0 - Y is still zero after UART tests
+    phy
+    plb
     rts
 .endproc
 

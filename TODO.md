@@ -12,7 +12,6 @@ Consolidated TODO list of things needed for the PC project.
 
 ## Simulator
 
-- Write "logs" to file instead of stdout
 - Update CMake and C++ versions
 - Finish PC16550D UART device
 - Create 65C22 VIA device

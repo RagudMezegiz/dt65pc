@@ -119,7 +119,14 @@ next_byte:
     pla
     bne post_fail
 
-    ; TODO Set up UART0 for terminal I/O
+    ; Set up UART0 for terminal I/O
+    ; At 4.9152 MHz clock, 19200 baud is divisor 16
+    uart_set_reg    UART0_BASE, uLCR, uLCR_DLAB
+    uart_set_reg    UART0_BASE, uDLL, 16
+    uart_set_reg    UART0_BASE, uDLM, 0
+    uart_set_reg    UART0_BASE, uLCR, uLCR_8BITS | uLCR_1STOP
+    uart_set_reg    UART0_BASE, uFCR, uFCR_FIFO | uFCR_4CHAR
+    uart_set_reg    UART0_BASE, uMCR, uMCR_DTR
 
     ; Check UART1
     pea UART1_BASE

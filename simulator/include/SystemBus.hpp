@@ -1,8 +1,9 @@
 /*
- * This file is part of the 65816 Emulator Library.
  * Copyright (c) 2018 Francesco Rigoni.
+ * Copyright (C) 2023 David Terhune
  *
- * https://github.com/FrancescoRigoni/Lib65816
+ * This file is part of dt65pc.
+ * https://github.com/RagudMezegiz/dt65pc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __SYSTEMBUS__
-#define __SYSTEMBUS__
+#ifndef SYSTEM_BUS_HPP_INCLUDED
+#define SYSTEM_BUS_HPP_INCLUDED
 
 #include <cstdint>
 #include <vector>
@@ -27,16 +28,17 @@
 
 class SystemBus {
     public:
-        void registerDevice(SystemBusDevice *);
-        void storeByte(const Address&, uint8_t);
-        void storeTwoBytes(const Address&, uint16_t);
-        uint8_t readByte(const Address&);
-        uint16_t readTwoBytes(const Address&);
-        Address readAddressAt(const Address&);
+        void registerDevice(SystemBusDevice* device);
+        void storeByte(const Address& address, uint8_t value);
+        void storeTwoBytes(const Address& address, uint16_t value);
+        uint8_t readByte(const Address& address);
+        uint16_t readTwoBytes(const Address& address);
+        Address readAddressAt(const Address& address);
+        void addCycles(int cycles);
 
     private:
 
         std::vector<SystemBusDevice *> mDevices;
 };
 
-#endif
+#endif // SYSTEM_BUS_HPP_INCLUDED

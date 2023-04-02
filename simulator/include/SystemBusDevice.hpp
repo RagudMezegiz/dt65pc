@@ -85,6 +85,10 @@ class SystemBusDevice {
         /// @param in absolute address
         /// @param out decoded address
         virtual bool decodeAddress(const Address& in, Address& out) = 0;
+
+        /// @brief Add clock cycles to the device's cycle count.
+        /// @param cycles clock cycles
+        virtual void addCycles(int cycles) {}
 };
 
 #endif // SYSBUS_DEVICE_H

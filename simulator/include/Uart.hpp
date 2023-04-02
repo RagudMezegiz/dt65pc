@@ -33,6 +33,7 @@ public:
     void storeByte(const Address& addr, uint8_t val);
     uint8_t readByte(const Address& addr);
     bool decodeAddress(const Address& in, Address& out);
+    void addCycles(int cycles);
 
 private:
     // Base address.
@@ -60,6 +61,9 @@ private:
 
     // Number of clock counts per byte transmitted or received
     uint32_t mClocksPerByte;
+
+    // Number of clock counts until the next character will go out.
+    int mClocksUntilSend;
 
     // Flag indicating the RBR has data.
     bool rbrFull;

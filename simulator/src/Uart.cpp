@@ -132,6 +132,7 @@ void UartPC16550D::storeByte(const Address& addr, uint8_t val) {
             // Setting FIFO mode. Clear FIFOs.
             mRcvrFifo.clear();
             mXmitFifo.clear();
+            rbrFull = false;
             mFCR = FIFO_ENABLE; // clear all bits except FIFO_ENABLE
             mIIR |= FIFO_INT; // set FIFO interrupt bits in IIR
         } else {
@@ -249,6 +250,34 @@ bool UartPC16550D::decodeAddress(const Address& in, Address& out) {
     return addr < 8; // 3 address lines
 }
 
+void UartPC16550D::addCycles(int cycles) {
+    mClocksUntilSend -= cycles;
+    if (mClocksUntilSend > 0) return;
+
+    // Reset for next character then send the current.
+    mClocksUntilSend += mClocksPerByte;
+
+    if (!(mLSR & THRE)) {
+        // There is something to transmit.
+        uint8_t val;
+        if (mFCR & FIFO_ENABLE) {
+            val = mXmitFifo.front();
+            mXmitFifo.pop_front();
+            if (mXmitFifo.empty()) {
+                mLSR |= THRE | TEMT;
+            }
+        } else {
+            val = mTHR;
+            mLSR |= THRE | TEMT;
+        }
+        // TODO Write value to other end
+    }
+
+    // TODO Check for something to read
+
+    checkForInterrupts();
+}
+
 void UartPC16550D::checkForInterrupts() {
     if (!mIER) return; // If no bits set, no interrupts allowed
 
@@ -283,7 +312,7 @@ void UartPC16550D::send() {
         }
         checkForInterrupts();
     } else {
-        // TODO Implement
+        mClocksUntilSend = mClocksPerByte;
     }
 }
 

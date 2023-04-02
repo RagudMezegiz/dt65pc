@@ -32,23 +32,6 @@ k_base      = $0400
 UART0_BASE  = $B000
 UART1_BASE  = $B100
 
-; UART register offsets
-uart_RBR = 0
-uart_THR = 0
-uart_IER = 1
-uart_IIR = 2
-uart_FCR = 2
-uart_LCR = 3
-uart_MCR = 4
-uart_LSR = 5
-uart_MSR = 6
-uart_SCR = 7
-uart_DLL = 0
-uart_DLM = 1
-
-; UART control bits
-uartMCR_LOOP    = $10
-
 ;======================================================================
 ; Kernel API call jump table.  All API calls are to two-byte addresses
 ; residing in kernel ROM.
@@ -57,7 +40,7 @@ uartMCR_LOOP    = $10
     .res $C100 - *, $00  ; leave all 128 jump table slots free
 
 ;======================================================================
-; Kernel string constant section.
+; Kernel string constants
 ;======================================================================
 
 ; Welcome message printed to terminal or screen on startup.
@@ -68,6 +51,8 @@ msg_welcome:
 ; Library includes
 ;======================================================================
 .include "math.s"
+.include "uart.s"
+.include "monitor.s"
 
 ;======================================================================
 ; Unused vectors. All unused vectors currently throw a fatal error and
@@ -130,7 +115,7 @@ next_byte:
     ; Check UART0, which is expected to be connected to a terminal so
     ; later tests can print results.
     pea UART0_BASE
-    jsr uart_loop_test
+    jsr u_loop_test
     pla
     bne post_fail
 
@@ -138,9 +123,11 @@ next_byte:
 
     ; Check UART1
     pea UART1_BASE
-    jsr uart_loop_test
+    jsr u_loop_test
     pla
     bne post_fail
+
+    ; TODO Check additional I/O devices here.
 
     ; High RAM check to save how many banks are populated.
     jsr hiram_test
@@ -158,47 +145,6 @@ next_byte:
 post_fail:
     ; TODO Figure out how to show POST failure (maybe blink LEDs)
     stp
-.endproc
-
-;======================================================================
-; Loopback test of PC16550D UART
-; The base address of the UART should be just above the return address
-; on the stack. It will be replaced with a 2-byte code indicating
-; test success or failure. Zero is success, while non-zero means
-; failure.
-;======================================================================
-.proc uart_loop_test
-    ; Set the loopback bit in the MCR, write a couple bytes to the
-    ; transmit register and verify they read back correctly.
-    set8a
-    lda #uartMCR_LOOP
-    ldy #uart_MCR
-    sta (3,s),y
-    lda #$55
-    ldy #uart_THR
-    sta (3,s),y
-    ; It's supposed to be immediate, but give it a couple cycles before reading
-    nop
-    lda (3,s),y ; RBR and THR are same address, so no need to change Y
-    cmp #$55
-    bne test_fail
-    lda #$AA
-    sta (3,s),y
-    nop
-    lda (3,s),y
-    cmp #$AA
-    bne test_fail
-
-    ; Successful test - replace address with 2-byte zero
-    set16a
-    lda #0
-    sta 3,s
-
-; If branch to here, UART address is non-zero and should indicate failure.
-; If fall-through, the zeros have already overwritten it.
-test_fail:
-    set16a
-    rts
 .endproc
 
 ;======================================================================
@@ -253,9 +199,6 @@ end_banks:
     ; TODO
     rti
 .endproc
-
-; Monitor code located here, but in separate source file for organization
-.include "monitor.s"
 
 ; Make sure we haven't overrun our kernel space
 .if * > $FFE4

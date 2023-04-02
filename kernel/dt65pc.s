@@ -16,53 +16,17 @@
 ; Symbolic constants
 ;======================================================================
 
-; Math ROM bank addresses
-k_math_square   = $E0
-k_math_invert   = $E4
-k_math_sin      = $E8
-k_math_asin     = $EA
-k_math_atan     = $EC
-k_math_log2     = $ED
-k_math_bitrev14 = $EF0000
-k_math_bitrev13 = $EF8000
-k_math_bitrev12 = $EFC000
-k_math_bitrev11 = $EFE000
-k_math_bitrev10 = $EFF000
-k_math_bitrev09 = $EFF800
-k_math_bitrev08 = $EFFC00
-k_math_bitrev07 = $EFFE00
-k_math_bitrev06 = $EFFF00
-k_math_bitrev05 = $EFFF80
-k_math_bitrev04 = $EFFFC0
-k_math_bitrev03 = $EFFFE0
-k_math_bitrev02 = $EFFFF0
-k_math_alog2    = $F0
-k_math_log2a    = $F2
-k_math_alog2a   = $F4
-k_math_log2b    = $F6
-k_math_alog2b   = $F8
-k_math_sqrt1    = $FA
-k_math_sqrt2    = $FB
-k_math_sqrt3    = $FC
-k_math_mult     = $FE
-
 ; Kernel zero-page storage
-k_flags = $00   ; Bit 0 = math ROM0 present
-                ; Bit 1 = math ROM1 present
-                ; Bit 2 = unused
-                ; Bit 3 = unused
-                ; Bit 4 = unused
-                ; Bit 5 = unused
-                ; Bit 6 = unused
-                ; Bit 7 = unused
-
+k_banks = $00           ; Number of high RAM banks present.
+k_flags = k_banks + 1   ; Bit 0 = math ROM0 present
+                        ; Bit 1 = math ROM1 present
+                        ; Others = unused
 k_temp  = k_flags + 1   ; 4 bytes
 
 k_zero_size = k_temp + 4    ; Number of zero-page bytes used by the kernel
 
 ; Kernel storage addresses
-k_base      = $0700
-bank_count  = k_base    ; 1 byte
+k_base      = $0400
 
 ; UART base addresses
 UART0_BASE  = $B000
@@ -99,6 +63,11 @@ uartMCR_LOOP    = $10
 ; Welcome message printed to terminal or screen on startup.
 msg_welcome:
     .asciiz "* * * Welcome to the DT65PC! * * *"
+
+;======================================================================
+; Library includes
+;======================================================================
+.include "math.s"
 
 ;======================================================================
 ; Unused vectors. All unused vectors currently throw a fatal error and
@@ -158,8 +127,8 @@ next_byte:
 
     ; Check memory-mapped I/O devices.
 
-    ; Check UART0, which is expected to be connected to a terminal so later
-    ; tests can print results.
+    ; Check UART0, which is expected to be connected to a terminal so
+    ; later tests can print results.
     pea UART0_BASE
     jsr uart_loop_test
     pla
@@ -179,40 +148,9 @@ next_byte:
     ; TODO Print available RAM
 
     ; See if the math ROMs are installed properly.
+    jsr m_rom_test
 
-    ; Use the SIN function for ROM0
-    lda #$2000      ; 45 degrees for the sine table
-    asl a           ; left-shift to convert to table index
-    sta k_temp      ; store in zero-page
-    lda #k_math_sin ; base table address
-    adc #0          ; add one if shift had a carry
-    sta k_temp + 2  ; store bank byte
-    lda [k_temp]    ; get the answer
-    cmp #$5A82
-    bne rom0_bad
-    set8a
-    lda #1          ; set ROM0 present flag
-    tsb k_flags
-    set16a
-rom0_bad:
-
-    ; Use the MULT function for ROM1
-    lda #$F008      ; $F0 * $08
-    asl a           ; left-shift to convert to table index
-    sta k_temp      ; store in zero-page
-    lda #k_math_mult    ; base table address
-    adc #0          ; add one if shift had a carry
-    sta k_temp + 2  ; store bank byte
-    lda [k_temp]    ; get the answer
-    cmp #$0780
-    bne rom1_bad
-    set8a
-    lda #2          ; set ROM1 present flag
-    tsb k_flags
-    set16a
-rom1_bad:
-
-    ldy k_flags     ; put flags into Y for sim display
+    ldy k_flags ; put flags into Y for sim display
 
     ; End of POST
     jmp mon_start
@@ -286,7 +224,7 @@ next_bank:
     bra next_bank
 end_banks:
     dex         ; X holds one more bank than exists, so decrement
-    stx bank_count
+    stx k_banks
 
     ; Reset to bank 0 - Y is still zero after UART tests
     phy

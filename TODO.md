@@ -8,7 +8,6 @@ Consolidated TODO list of things needed for the PC project.
   - Device checks
 - Welcome message to serial out (assume a terminal)
 - Move UART to separate source file
-- Move math to separate source file
 
 ## Simulator
 

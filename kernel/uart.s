@@ -3,6 +3,62 @@
 ;
 
 ;======================================================================
+; Macro declaring a UART in struct form
+;======================================================================
+.macro uart_make name, base
+    .struct name
+        .org base
+        .union
+            RBR .byte
+            THR .byte
+            DLL .byte
+        .endunion
+        .union
+            IER .byte
+            DLM .byte
+        .endunion
+        .union
+            IIR .byte
+            FCR .byte
+        .endunion
+        LCR .byte
+        MCR .byte
+        LSR .byte
+        MSR .byte
+        SCR .byte
+    .endstruct
+
+    ; Write a string to this UART. The string should be just above the
+    ; return address on the stack. After pushing accumulator, string
+    ; will be at S + 5.
+    .proc .ident(.concat(.string(name), "_writes"))
+        .a16
+        pha
+        set8a
+
+        ldy #0
+    next:
+        ; Wait for transmit holding register to be empty.
+        lda .ident(.string(name))::LSR
+        and #uLSR_THRE
+        beq next
+        ; Get the next character and exit if finished
+        lda (5,s),y
+        beq done
+        ; Write the character and get the next
+        sta .ident(.string(name))::THR
+        iny
+        bra next
+
+    done:
+        ; Restore accumulator and return.
+        set16a
+        pla
+        rts
+    .endproc
+.endmac
+
+;======================================================================
 ; Register offsets
 ;======================================================================
 uRBR = 0
@@ -53,12 +109,16 @@ uMCR_OUT2   = 8
 uMCR_LOOP   = $10
 
 ;======================================================================
-; Set register macro.
+; LSR status bits
 ;======================================================================
-.macro  uart_set_reg    base, reg, val
-    ldy #val
-    sty base + reg
-.endmac
+uLSR_DR     = 1
+uLSR_OE     = 2
+uLSR_PE     = 4
+uLSR_FE     = 8
+uLSR_BI     = $10
+uLSR_THRE   = $20
+uLSR_TEMT   = $40
+uLSR_FIFO   = $80
 
 ;======================================================================
 ; Loopback test of PC16550D UART

@@ -6,6 +6,9 @@
 ; Force 65816 mode in case the command-line invocation didn't
 .p816
 
+; Make sure we can use C-style string escapes
+.feature string_escapes
+
 ; Kernel ROM starts at C000
     .org $C000
 
@@ -43,9 +46,12 @@ UART1_BASE  = $B100
 ; Kernel string constants
 ;======================================================================
 
-; Welcome message printed to terminal or screen on startup.
-msg_welcome:
-    .asciiz "* * * Welcome to the DT65PC! * * *"
+; Ready message printed to terminal or screen on startup.
+; It will be followed by the free byte count from high RAM.
+msg_ready:
+    .asciiz "DT65PC ready. "
+msg_bytes_free:
+    .asciiz " bytes free.\r\n"
 
 ;======================================================================
 ; Library includes
@@ -53,6 +59,9 @@ msg_welcome:
 .include "math.s"
 .include "uart.s"
 .include "monitor.s"
+
+uart_make TERM, $B000
+uart_make SERIAL, $B100
 
 ;======================================================================
 ; Unused vectors. All unused vectors currently throw a fatal error and
@@ -121,12 +130,18 @@ next_byte:
 
     ; Set up UART0 for terminal I/O
     ; At 4.9152 MHz clock, 19200 baud is divisor 16
-    uart_set_reg    UART0_BASE, uLCR, uLCR_DLAB
-    uart_set_reg    UART0_BASE, uDLL, 16
-    uart_set_reg    UART0_BASE, uDLM, 0
-    uart_set_reg    UART0_BASE, uLCR, uLCR_8BITS | uLCR_1STOP
-    uart_set_reg    UART0_BASE, uFCR, uFCR_FIFO | uFCR_4CHAR
-    uart_set_reg    UART0_BASE, uMCR, uMCR_DTR
+    ldy #uLCR_DLAB
+    sty TERM::LCR
+    ldy #16
+    sty TERM::DLL
+    ldy #0
+    sty TERM::DLM
+    ldy #uLCR_8BITS | uLCR_1STOP
+    sty TERM::LCR
+    ldy #uFCR_FIFO | uFCR_4CHAR
+    sty TERM::FCR
+    ldy #uMCR_DTR
+    sty TERM::MCR
 
     ; Check UART1
     pea UART1_BASE
@@ -139,7 +154,13 @@ next_byte:
     ; High RAM check to save how many banks are populated.
     jsr hiram_test
 
-    ; TODO Print available RAM
+    pea msg_ready
+    jsr TERM_writes
+    pla
+    ; TODO Print available RAM in decimal
+    pea msg_bytes_free
+    jsr TERM_writes
+    pla
 
     ; See if the math ROMs are installed properly.
     jsr m_rom_test

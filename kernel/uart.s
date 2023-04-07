@@ -28,6 +28,9 @@
         SCR .byte
     .endstruct
 
+    ; Address constant
+    .ident(.concat(.string(name), "_addr")) = base
+
     ; Write a string to this UART. The string should be just above the
     ; return address on the stack. Clobbers the accumulator and the Y
     ; register.

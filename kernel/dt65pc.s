@@ -31,10 +31,6 @@ k_zero_size = k_temp + 4    ; Number of zero-page bytes used by the kernel
 ; Kernel storage addresses
 k_base      = $0400
 
-; UART base addresses
-UART0_BASE  = $B000
-UART1_BASE  = $B100
-
 ;======================================================================
 ; Kernel API call jump table.  All API calls are to two-byte addresses
 ; residing in kernel ROM.
@@ -123,7 +119,7 @@ next_byte:
 
     ; Check UART0, which is expected to be connected to a terminal so
     ; later tests can print results.
-    pea UART0_BASE
+    pea TERM_addr
     jsr u_loop_test
     pla
     bne post_fail
@@ -144,7 +140,7 @@ next_byte:
     sty TERM::MCR
 
     ; Check UART1
-    pea UART1_BASE
+    pea SERIAL_addr
     jsr u_loop_test
     pla
     bne post_fail

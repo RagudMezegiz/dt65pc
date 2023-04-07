@@ -16,12 +16,15 @@
 // along with dt65pc.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Terminal.hpp"
+#include "Log.hpp"
 
 #if defined(_WIN32)
 #include <conio.h>
 #else
 #error Platform console not defined
 #endif
+
+#define LOG_TAG "Terminal"
 
 Terminal::Terminal()
 {
@@ -33,8 +36,9 @@ Terminal::~Terminal()
 
 void Terminal::write(uint8_t val)
 {
+    Log::trc(LOG_TAG).str("Writing ").hex(val, 2).show();
 #if defined(_WIN32)
-    _putch(val);
+    _putch(val & 0xFF);
 #endif
 }
 

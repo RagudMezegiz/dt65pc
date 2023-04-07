@@ -16,6 +16,9 @@
 // along with dt65pc.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "Uart.hpp"
+#include "Log.hpp"
+
+#define LOG_TAG "Uart"
 
 // Number of bytes in FIFOs.
 #define FIFO_SIZE 16
@@ -97,12 +100,14 @@ void UartPC16550D::storeByte(const Address &addr, uint8_t val)
                 // Write to transmit FIFO.
                 if (mXmitFifo.size() < FIFO_SIZE)
                 {
+                    Log::trc(LOG_TAG).str("Pushing to FIFO ").hex(val, 2).show();
                     mXmitFifo.push_back(val);
                 }
             }
             else
             {
                 // FIFO not enabled; write to THR
+                Log::trc(LOG_TAG).str("Setting THR ").hex(val, 2).show();
                 mTHR = val;
             }
             // Either a FIFO write or a THR write clears both THRE and TEMT
@@ -312,6 +317,7 @@ void UartPC16550D::addCycles(int cycles)
             val = mTHR;
             mLSR |= THRE | TEMT;
         }
+        Log::trc(LOG_TAG).str("Transmitting ").hex(val, 2).show();
 
         if (mTerm)
         {
@@ -358,10 +364,15 @@ void UartPC16550D::send()
         {
             val = mXmitFifo.front();
             mXmitFifo.pop_front();
+            if (mXmitFifo.empty())
+            {
+                mLSR |= THRE | TEMT;
+            }
         }
         else
         {
             val = mTHR;
+            mLSR |= THRE | TEMT;
         }
         receive(val);
         checkForInterrupts();

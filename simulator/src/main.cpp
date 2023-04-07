@@ -33,10 +33,12 @@ int main(int argc, char **argv) {
     Log::out("dt65pc.log");
     Log::vrb(LOG_TAG).str("+++ DT65PC Simulation +++").show();
 
+    Terminal term;
+
     Rom kernel(Address(0x00, 0xC000), "..\\kernel\\dt65pc.rom");
     Rom math0(Address(0xE0, 0x0000), "..\\kernel\\rom0.rom");
     Rom math1(Address(0xF0, 0x0000), "..\\kernel\\rom1.rom");
-    UartPC16550D uart0(Address(0x00, 0xB000));
+    UartPC16550D uart0(Address(0x00, 0xB000), &term);
     UartPC16550D uart1(Address(0x00, 0xB100));
     Ram ram = Ram(0x80);
 

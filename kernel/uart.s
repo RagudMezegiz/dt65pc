@@ -29,11 +29,9 @@
     .endstruct
 
     ; Write a string to this UART. The string should be just above the
-    ; return address on the stack. After pushing accumulator, string
-    ; will be at S + 5.
+    ; return address on the stack. Clobbers the accumulator and the Y
+    ; register.
     .proc .ident(.concat(.string(name), "_writes"))
-        .a16
-        pha
         set8a
 
         ldy #0
@@ -43,7 +41,7 @@
         and #uLSR_THRE
         beq next
         ; Get the next character and exit if finished
-        lda (5,s),y
+        lda (3,s),y
         beq done
         ; Write the character and get the next
         sta .ident(.string(name))::THR
@@ -53,7 +51,6 @@
     done:
         ; Restore accumulator and return.
         set16a
-        pla
         rts
     .endproc
 .endmac
@@ -125,7 +122,7 @@ uLSR_FIFO   = $80
 ; The base address of the UART should be just above the return address
 ; on the stack. It will be replaced with a 2-byte code indicating
 ; test success or failure. Zero is success, while non-zero means
-; failure.
+; failure. Clobbers the accumulator and the Y register.
 ;======================================================================
 .proc u_loop_test
     ; Set the loopback bit in the MCR, write a couple bytes to the

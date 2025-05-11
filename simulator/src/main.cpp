@@ -47,6 +47,7 @@ int main(int argc, char **argv) {
     systemBus.registerDevice(&math0);
     systemBus.registerDevice(&math1);
     systemBus.registerDevice(&uart0);
+    systemBus.registerDevice(&uart1);
     systemBus.registerDevice(&ram);
 
     Cpu65816 cpu(systemBus);

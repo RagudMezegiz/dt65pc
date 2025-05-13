@@ -1,5 +1,5 @@
 ; DT65PC kernel source code
-; Copyright (c) 2019-2023 David Terhune
+; Copyright (c) 2019-2025 David Terhune
 ;
 ; ca65 assembler syntax version
 
@@ -20,16 +20,18 @@
 ;======================================================================
 
 ; Kernel zero-page storage
-k_banks = $00           ; Number of high RAM banks present.
-k_flags = k_banks + 1   ; Bit 0 = math ROM0 present
-                        ; Bit 1 = math ROM1 present
-                        ; Others = unused
-k_temp  = k_flags + 1   ; 4 bytes
+.struct k_zero
+    banks .byte         ; Number of high RAM banks present
+    flags .byte         ; Bit 0 = math ROM0 present
+                        ; bit 1 = math ROM1 present
+    temp  .dword        ; 4-byte temporary accumulator
+    scratch .res 16     ; 16-byte scratchpad
+.endstruct
 
-k_zero_size = k_temp + 4    ; Number of zero-page bytes used by the kernel
-
-; Kernel storage addresses
-k_base      = $0400
+; Kernel storage blocks. Each is one page in length.
+k_base = $0400
+k_buf1 = $0500
+k_buf2 = $0600
 
 ;======================================================================
 ; Kernel API call jump table.  All API calls are to two-byte addresses
@@ -95,12 +97,15 @@ native_nmib:
     sta a:0     ; force absolute rather than zero page
     lda a:0
     cmp #$AA55
-    bne post_fail
-    lda #$55AA
+    beq :+
+    jmp post_fail
+:   lda #$55AA
     sta a:0
     lda a:0
     cmp #$55AA
-    bne post_fail
+    beq :+
+    jmp post_fail
+:
 
     ; Low RAM appears to exist, so it should be safe to set the stack
     ; pointer and start using subroutines. Stack starts just under the
@@ -109,7 +114,7 @@ native_nmib:
     tcs
 
     ; Zero out kernel zero-page storage.
-    ldx #k_zero_size
+    ldx #.sizeof(k_zero)
 next_byte:
     dex
     stz 0,x
@@ -153,15 +158,43 @@ next_byte:
     pea msg_ready
     jsr TERM_writes
     pla
-    ; TODO Print available RAM in decimal
+
+    ; Print available RAM in bytes, excluding bank 0.
+    pea k_buf1
+    pei (k_zero::banks) ; Flags is still zero, so this is safe.
+    pea 0
+    jsr m_ul2a
+    pla
+    pla
+    pla
+
+    ; Increment the buffer address past all the leading zeros before
+    ; writing to the terminal.
+    ldy #$FF
+:   iny
+    ldx k_buf1,Y
+    cpx #'0'
+    beq :-
+    sty k_zero::temp
+    stz k_zero::temp + 1
+    clc
+    adc k_zero::temp
+    pha
+    jsr TERM_writes
+    pla
+    
     pea msg_bytes_free
     jsr TERM_writes
     pla
 
     ; See if the math ROMs are installed properly.
     jsr m_rom_test
+    lda k_zero::flags
+    and #3
+    cmp #3
+    bne post_fail
 
-    ldy k_flags ; put flags into Y for sim display
+    ldy k_zero::flags   ; put flags into Y for sim display
 
     ; End of POST
     jmp mon_start
@@ -194,7 +227,7 @@ next_bank:
     bra next_bank
 end_banks:
     dex         ; X holds one more bank than exists, so decrement
-    stx k_banks
+    stx k_zero::banks
 
     ; Reset to bank 0 - Y is still zero after UART tests
     phy

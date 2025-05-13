@@ -1,5 +1,5 @@
 // Copyright (C) 2018 Francesco Rigoni
-// Copyright (C) 2023 David Terhune
+// Copyright (C) 2023-25 David Terhune
 // 
 // This file is part of dt65pc.
 // https://github.com/RagudMezegiz/dt65pc
